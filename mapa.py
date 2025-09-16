@@ -4,8 +4,11 @@ import os
 import random as rd
 import time
 import platform
+import keyboard
 
 init(autoreset=True)
+
+ultima_tecla = None
 
 # Função para definir o comando de limpar tela
 def comando_clear():
@@ -25,6 +28,10 @@ def gerar_premio(jogador_x, jogador_y):
         if novo_x != jogador_x or novo_y != jogador_y:
             return novo_x, novo_y
 
+def handle(e):
+            global ultima_tecla
+            ultima_tecla = e.name
+
 # Função para exibir o mapa
 def view_mapa(mapa):
     for linha in mapa:
@@ -32,6 +39,7 @@ def view_mapa(mapa):
 
 # Função principal do jogo
 def jogo():
+    global ultima_tecla
     conn = sq.connect("database.db")
     cursor = conn.cursor()
 
@@ -58,7 +66,8 @@ def jogo():
         conn.commit()
     else:
         jogador_x, jogador_y, passos, money, premio_x, premio_y = save
-
+    
+    keyboard.hook(handle)
     while True:
         os.system(clear)
         # Cria o mapa
@@ -77,24 +86,29 @@ def jogo():
         view_mapa(mapa)
         print(f"X: {jogador_x} || Y: {jogador_y} || Dinheiro: ${money} || Passos: {passos}")
 
-        comando = input("Digite w/a/s/d para mover (0 para sair): ").lower()
+        # comando = input("Digite w/a/s/d para mover (0 para sair): ").lower()
 
-        if comando == "d" and jogador_x < 28:
+
+        if ultima_tecla == "d" and jogador_x < 28:
             jogador_x += 1
             passos += 1
-        elif comando == "a" and jogador_x > 1:
+        elif ultima_tecla == "a" and jogador_x > 1:
             jogador_x -= 1
             passos += 1
-        elif comando == "s" and jogador_y < 8:
+        elif ultima_tecla == "s" and jogador_y < 8:
             jogador_y += 1
             passos += 1
-        elif comando == "w" and jogador_y > 1:
+        elif ultima_tecla == "w" and jogador_y > 1:
             jogador_y -= 1
             passos += 1
-        elif comando == "0":
+        elif ultima_tecla == "space":
+            ultima_tecla = None
+        elif ultima_tecla == "0":
             print("Saindo do jogo...")
             time.sleep(1)
             break
+
+        time.sleep(0.1)
 
         # Coleta do prêmio
         if jogador_x == premio_x and jogador_y == premio_y:
